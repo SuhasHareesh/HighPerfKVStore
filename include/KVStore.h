@@ -1,17 +1,29 @@
 #ifndef KVSTORE_H
 #define KVSTORE_H
 
-#include<unordered_map>
-#include<string>
-#include<iostream>
-#include<fstream>
+#include <vector>
+#include <unordered_map>
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <mutex>
+#include <atomic>
+#include <memory> 
 
 class KVStore {
     private:
-        std::unordered_map<std::string, std::string> store;
+        static const int NUM_BUCKETS = 16;
+        std::vector<std::unordered_map<std::string, std::string>> bucketStores;
+        std::vector<std::mutex> bucketMutexes;
+
         const std::string filename = "kvstore.kv";
+
         void writeToFile();
         void readFromFile();
+
+        int getBucket(const std::string &pKey) const {
+            return std::hash<std::string>{}(pKey) % NUM_BUCKETS;
+        }
 
     public:
         KVStore();
