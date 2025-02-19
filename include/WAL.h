@@ -11,7 +11,7 @@
 
 class WAL {
     private:
-        const std::string WALFILE = "KVStoreWAL.wal"
+        const std::string FILENAME = "KVStore.wal"
 
         std::ofstream fileWriter;
         std::mutex fileLock;

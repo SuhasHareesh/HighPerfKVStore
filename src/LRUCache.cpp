@@ -38,3 +38,42 @@ void LRUCache::evictKeysIfNeeded(std::unordered_map<std::string, std::string>& p
         lruList.pop_back();
     }
 }
+
+void LRUCache::saveState() {
+    std::lock_guard<std::mutex> lock(lruMutex);
+    std::ofstream file(FILENAME);
+
+    size_t lruSize = lruList.size();
+    file.write(reinterpret_cast<const char*>(&lruSize), sizeof(size_t));
+
+    for (const auto& key: lruList) {
+        size_t keySize = key.size();
+        file.write(reinterpret_cast<const char*>(&keySize), sizeof(size_t));
+        file.write(key.c_str(), keySize);
+    }
+
+    file.close();
+}
+
+void LRUCache::loadState() {
+    std::lock_guard<std::mutex> lock(lruMutex);
+    std::ifstream file(FILENAME);
+
+    lruList.clear();
+    keyPosition.clear();
+
+    size_t lruSize;
+    file.read(reinterpret_cast<char*>(&lruSize), sizeof(size_t));
+    for (size_t i = 0; i < lruSize; i++) {
+        size_t keySize;
+        file.read(reinterpret_cast<char*>(&keySize), sizeof(size_t));
+
+        std::string key(keySize, '\0');
+        file.read(&key[0], keySize);
+
+        lruList.push_back(key);
+        keyPosition[key] = std::prev(lruList.end());
+    }
+
+    file.close();
+}
