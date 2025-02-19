@@ -41,7 +41,7 @@ void LRUCache::evictKeysIfNeeded(std::unordered_map<std::string, std::string>& p
 
 void LRUCache::saveState() {
     std::lock_guard<std::mutex> lock(lruMutex);
-    std::ofstream file(FILENAME);
+    std::ofstream file(FILENAME, std::ios::binary | std::ios::trunc);
 
     size_t lruSize = lruList.size();
     file.write(reinterpret_cast<const char*>(&lruSize), sizeof(size_t));
@@ -57,7 +57,7 @@ void LRUCache::saveState() {
 
 void LRUCache::loadState() {
     std::lock_guard<std::mutex> lock(lruMutex);
-    std::ifstream file(FILENAME);
+    std::ifstream file(FILENAME, std::ios::binary);
 
     lruList.clear();
     keyPosition.clear();
