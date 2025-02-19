@@ -20,7 +20,7 @@ void LRUCache::removeKey(const std::string& pKey) {
         keyPosition.erase(pKey);
     }
 }
-
+// For Debuggin purposes
 void LRUCache::printLRUState() {
     std::lock_guard<std::mutex> lock(lruMutex);
     std::cout << "LRU State: ";
@@ -33,9 +33,8 @@ void LRUCache::printLRUState() {
 void LRUCache::evictKeysIfNeeded(std::unordered_map<std::string, std::string>& pStore) {
     std::lock_guard<std::mutex> lock(lruMutex);
     if(lruList.size() >= maxSize) {
-        std::string lruKey = lruList.pop_back();
-        keyPosition.erase(lruKey);
-        pStore.erase(lruKey);
-        
+        keyPosition.erase(lruList.back());
+        pStore.erase(lruList.back());
+        lruList.pop_back();
     }
 }

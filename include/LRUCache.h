@@ -1,6 +1,12 @@
 #ifndef LRU_CACHE_H
 #define LRU_CACHE_H
 
+#include <iostream>
+#include <unordered_map>
+#include <string>
+#include <list>
+#include <mutex>
+
 class LRUCache {
     private:
         size_t maxSize;
