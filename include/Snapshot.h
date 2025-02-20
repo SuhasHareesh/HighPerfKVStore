@@ -16,8 +16,8 @@ class Snapshot {
     
     public:
 
-        void saveSnapshot(const std::unordered_map<std::string, std::string>&, const LRUCache&);
-        void loadSnapshot(std::unordered_map<std::string, std::string>&, LRUCache&);
+        void saveSnapshot(const std::unordered_map<std::string, std::string>&, LRUCache&);
+        void loadSnapshot(std::unordered_map<std::string, std::string>&, LRUCache&, std::unordered_map<std::string, std::shared_mutex>&);
 
 };
 

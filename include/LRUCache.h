@@ -18,14 +18,14 @@ class LRUCache {
         std::mutex lruMutex;
 
     public:
-        explicit LRUCache(size_t maxSize);
+        explicit LRUCache(size_t);
         void accessKey(const std::string&);
         void removeKey(const std::string&);
-        void evictKeysIfNeeded(std::unordered_map<std::string, std::string>&);
+        std::string evictKeysIfNeeded();
         void printLRUState();
         
         void saveState();
         void loadState();
-}
+};
 
 #endif

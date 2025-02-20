@@ -30,13 +30,15 @@ void LRUCache::printLRUState() {
     std::cout << std::endl;
 }
 
-void LRUCache::evictKeysIfNeeded(std::unordered_map<std::string, std::string>& pStore) {
+std::string LRUCache::evictKeysIfNeeded() {
     std::lock_guard<std::mutex> lock(lruMutex);
+    std::string evictedKey = "";
     if(lruList.size() >= maxSize) {
         keyPosition.erase(lruList.back());
-        pStore.erase(lruList.back());
+        evictedKey.assign(lruList.back());
         lruList.pop_back();
     }
+    return evictedKey;
 }
 
 void LRUCache::saveState() {

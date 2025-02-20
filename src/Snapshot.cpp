@@ -1,7 +1,7 @@
 #include <Snapshot.h>
 
-void Snapshot::saveSnapshot(const std::unordered_map<std::string, std::string>& pKVStore, const LRUCache& pLruList) {
-    std::lock_guard<std::mutex> lock(snapshotLock);
+void Snapshot::saveSnapshot(const std::unordered_map<std::string, std::string>& pKVStore, LRUCache& pLruList) {
+    std::lock_guard<std::shared_mutex> lock(snapshotLock);
     std::ofstream snapshotWriter(FILENAME, std::ios::binary | std::ios::trunc);
     if (!snapshotWriter) {
         std::cerr << "Error: Unable to open snapshot." << std::endl;
@@ -13,7 +13,7 @@ void Snapshot::saveSnapshot(const std::unordered_map<std::string, std::string>& 
 
     for(const auto& pair : pKVStore) {
         size_t keySize = pair.first.size();
-        size_t valueSize = pair.second.first.size();
+        size_t valueSize = pair.second.size();
 
         snapshotWriter.write(reinterpret_cast<const char*>(&keySize), sizeof(keySize));
         snapshotWriter.write(pair.first.c_str(), keySize);
@@ -26,8 +26,8 @@ void Snapshot::saveSnapshot(const std::unordered_map<std::string, std::string>& 
     std::cout << "Snapshot saved successfully" << std::endl;
 }
 
-void Snapshot::loadSnapshot(std::unordered_map<std::string, std::string>& pKVStore, LRUCache& pLruList) {
-    std::lock_guard<std::mutex> lock(snapshotLock);
+void Snapshot::loadSnapshot(std::unordered_map<std::string, std::string>& pKVStore, LRUCache& pLruList, std::unordered_map<std::string, std::shared_mutex>& pKeyLocks) {
+    std::lock_guard<std::shared_mutex> lock(snapshotLock);
     std::ifstream snapshotReader(FILENAME, std::ios::binary);
     if (!snapshotReader) {
         std::cerr << "No snapshot found, starting fresh." << std::endl;
@@ -54,6 +54,7 @@ void Snapshot::loadSnapshot(std::unordered_map<std::string, std::string>& pKVSto
         snapshotReader.read(&value[0], valueSize);
 
         pKVStore[key] = value;
+        pKeyLocks.try_emplace(key);
     }
     pLruList.loadState();
     snapshotReader.close();

@@ -2,7 +2,6 @@
 
 WAL::WAL() {
     std::cout << "WAL File Open for business" << std::endl;
-    fileWriter.open(FILENAME, std::ios::app);
 }
 
 WAL::~WAL() {
@@ -17,28 +16,28 @@ void WAL::flush() {
     std::ofstream newWAL(FILENAME, std::ios::trunc);
     newWAL.close();
 
-    walFile.open(FILENAME, std::ios::app);
+    fileWriter.open(FILENAME, std::ios::app);
     std::cout << "WAL flushed after snapshot!" << std::endl;
 }
 
 void WAL::logPut(const std::string& pKey, const std::string& pValue) {
     std::lock_guard<std::mutex> lock(fileLock);
-    walFile << "PUT " << pKey << " " << pValue << std::endl;
+    fileWriter << "PUT " << pKey << " " << pValue << std::endl;
 }
 
 void WAL::logRemove(const std::string &pKey)
 {
     std::lock_guard<std::mutex> lock(fileLock);
-    walFile << "REMOVE " << pKey << std::endl;
+    fileWriter << "REMOVE " << pKey << std::endl;
 }
 
-void WAL::replayWAL(std::unordered_map<std::string, std::string>& pKVStore, LRUCache& pLruList) {
+void WAL::replayWAL(std::unordered_map<std::string, std::string>& pKVStore, LRUCache& pLruList, std::unordered_map<std::string, std::shared_mutex>& pKeyLocks) {
 
     std::lock_guard<std::mutex> lock(fileLock);
     std::ifstream walReader(FILENAME);
 
     if(!walReader) {
-        std::cerr << "Error opening WAL file" << std::endl;
+        std::cerr << "WAL is empty, starting fresh" << std::endl;
         return;
     }
 
@@ -51,7 +50,12 @@ void WAL::replayWAL(std::unordered_map<std::string, std::string>& pKVStore, LRUC
             walReader >> value;
             pKVStore[key] = value;
             pLruList.accessKey(key);
-            pLruList.evictKeysIfNeeded(store);
+            pKeyLocks.try_emplace(key);
+            std::string evictedKey = pLruList.evictKeysIfNeeded();
+            if(!evictedKey.empty()) {
+                pKVStore.erase(evictedKey);
+                pKeyLocks.erase(evictedKey);
+            }
         }
         else if(command == "REMOVE") {
             pKVStore.erase(key);
@@ -61,4 +65,6 @@ void WAL::replayWAL(std::unordered_map<std::string, std::string>& pKVStore, LRUC
 
     walReader.close();
     std::cout << "WAL replay complete";
+    std::cout << "Opening WAL file";
+    fileWriter.open(FILENAME, std::ios::app);
 }

@@ -6,31 +6,31 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <mutex>
-#include <atomic>
-#include <memory> 
+#include <shared_mutex>
+#include <thread>
+
+#include <WAL.h>
+#include <Snapshot.h>
+#include <LRUCache.h>
+
 
 class KVStore {
     private:
-        static const int NUM_BUCKETS = 16;
-        std::vector<std::unordered_map<std::string, std::string>> bucketStores;
-        std::vector<std::mutex> bucketMutexes;
-
-        const std::string filename = "kvstore.kv";
-
-        void writeToFile();
-        void readFromFile();
-
-        int getBucket(const std::string &pKey) const {
-            return std::hash<std::string>{}(pKey) % NUM_BUCKETS;
-        }
+        Snapshot snapshot;
+        WAL writeAheadLogger;
+        LRUCache lruCache = LRUCache(10);
+    
+        std::unordered_map<std::string, std::string> store;
+        std::unordered_map<std::string, std::shared_mutex> keyLocks;
+        mutable std::mutex keyLocksMutex;
 
     public:
         KVStore();
         ~KVStore();
-        void put(const std::string& pKey, const std::string& pValue);
-        std::string get(const std::string& pKey);
-        void remove(const std::string& pKey);
+
+        void put(const std::string&, const std::string&);
+        std::string get(const std::string&);
+        void remove(const std::string&);
 };
 
 #endif
