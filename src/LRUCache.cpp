@@ -34,9 +34,12 @@ std::string LRUCache::evictKeysIfNeeded() {
     std::lock_guard<std::mutex> lock(lruMutex);
     std::string evictedKey = "";
     if(lruList.size() >= maxSize) {
-        keyPosition.erase(lruList.back());
         evictedKey.assign(lruList.back());
         lruList.pop_back();
+
+        if (keyPosition.find(evictedKey) != keyPosition.end()) {
+            keyPosition.erase(evictedKey);
+        }
     }
     return evictedKey;
 }

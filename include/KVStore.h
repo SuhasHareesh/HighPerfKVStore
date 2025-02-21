@@ -18,7 +18,7 @@ class KVStore {
     private:
         Snapshot snapshot;
         WAL writeAheadLogger;
-        LRUCache lruCache = LRUCache(10);
+        LRUCache lruCache = LRUCache(1000000);
     
         std::unordered_map<std::string, std::string> store;
         std::unordered_map<std::string, std::shared_mutex> keyLocks;

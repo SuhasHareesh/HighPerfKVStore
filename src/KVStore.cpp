@@ -42,6 +42,7 @@ void KVStore::put(const std::string& pKey, const std::string& pValue) {
             std::unique_lock<std::shared_mutex> lock(keyLocks[evictedKey]);
             store.erase(evictedKey);
         }
+        std::lock_guard<std::mutex> globalLock(keyLocksMutex);
         keyLocks.erase(evictedKey);
     }
     
@@ -50,12 +51,13 @@ void KVStore::put(const std::string& pKey, const std::string& pValue) {
 std::string KVStore::get(const std::string& pKey) {
     std::shared_lock<std::shared_mutex> lock(keyLocks[pKey]);
 
-    if(store.find(pKey) == store.end()) {
-        return "Key Not Found";
+    if(store.find(pKey) != store.end()) {
+
+        lruCache.accessKey(pKey);
+        return store[pKey];
     }
 
-    lruCache.accessKey(pKey);
-    return store[pKey];
+    return "Key Not Found";
 }
 
 void KVStore::remove(const std::string& pKey) {

@@ -64,7 +64,7 @@ void WAL::replayWAL(std::unordered_map<std::string, std::string>& pKVStore, LRUC
     }
 
     walReader.close();
-    std::cout << "WAL replay complete";
-    std::cout << "Opening WAL file";
+    std::cout << "WAL replay complete" << std::endl;
+    std::cout << "Opening WAL file" << std::endl;
     fileWriter.open(FILENAME, std::ios::app);
 }
